@@ -1,0 +1,79 @@
+2
+3 3
+.#.
+###
+.#.
+5 3
+###
+.#.
+.#.
+.#.
+###
+
+
+import sys
+from collections import deque
+rd = sys.stdin.buffer.readline
+
+def hopcroft_karp(adj, nL, nR):
+    INF = 10**9
+    pairL = [-1] * nL
+    pairR = [-1] * nR
+    dist = [0] * nL
+
+    def bfs():
+        q = deque()
+        for u in range(nL):
+            if pairL[u] == -1:
+                dist[u] = 0
+                q.append(u)
+            else:
+                dist[u] = INF
+        found = False
+        while q:
+            u = q.popleft()
+            for v in adj[u]:
+                pu = pairR[v]
+                if pu != -1 and dist[pu] == INF:
+                    dist[pu] = dist[u] + 1
+                    q.append(pu)
+                if pu == -1:
+                    found = True
+        return found
+
+    def dfs(u):
+        for v in adj[u]:
+            pu = pairR[v]
+            if pu == -1 or (dist[pu] == dist[u] + 1 and dfs(pu)):
+                pairL[u] = v
+                pairR[v] = u
+                return True
+        dist[u] = 10**9
+        return False
+
+    matching = 0
+    while bfs():
+        for u in range(nL):
+            if pairL[u] == -1:
+                if dfs(u):
+                    matching += 1
+    return matching
+
+T = int(rd().strip())
+out = []
+for _ in range(T):
+    H, W = map(int, rd().split())
+    board = [rd().strip().decode() for _ in range(H)]
+
+    # 행-열 이분 그래프 구성
+    adj = [[] for _ in range(H)]
+    for i in range(H):
+        row = board[i]
+        for j, ch in enumerate(row):
+            if ch == '#':
+                adj[i].append(j)
+
+    ans = hopcroft_karp(adj, H, W)  # = 최소 정점 커버 크기 = 최소 연산 횟수
+    out.append(str(ans))
+
+print("\n".join(out))
